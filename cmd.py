@@ -26,7 +26,7 @@ def showhide(self, value):
 
 #---------------------------------------------------------------------------------------
 def reload():
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
 
     clear()
@@ -40,7 +40,7 @@ def reload():
 
 
 def clear():
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist    
     itemlist.clear()
 
@@ -49,7 +49,7 @@ def clear():
 #その差を出してmove_upで順番を変更する
 #---------------------------------------------------------------------------------------
 def move(type):
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
     index = ui_list.active_index
 
@@ -88,7 +88,7 @@ def apply():
     props = bpy.context.scene.kiatools_oa
     props.handler_through = True
 
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
     active_index = ui_list.active_index
 
@@ -113,7 +113,7 @@ def apply_checked():
     props = bpy.context.scene.kiatools_oa
     props.handler_through = True
 
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
     active_index = ui_list.active_index
 
@@ -133,7 +133,7 @@ def apply_checked():
 #モディファイヤを削除する
 #---------------------------------------------------------------------------------------
 def remove():
-    ui_list = bpy.context.window_manager.kiatools_props_modifierlist
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist    
     ob =utils.getActiveObj()    
     active_index = ui_list.active_index
