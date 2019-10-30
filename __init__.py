@@ -1,0 +1,223 @@
+import bpy
+from bpy.types import ( PropertyGroup , Panel , Operator ,UIList)
+from bpy.app.handlers import persistent
+import imp
+
+from bpy.props import(
+    PointerProperty,
+    IntProperty,
+    BoolProperty,
+    StringProperty,
+    CollectionProperty,
+    FloatProperty,
+    EnumProperty
+    )
+
+
+from . import cmd
+imp.reload(cmd)
+
+
+bl_info = {
+"name": "kiamodifierlist",
+"author": "kisekiakeshi",
+"version": (0, 1),
+"blender": (2, 80, 0),
+"description": "kiamodifierlist",
+"category": "Object"}
+
+
+
+try: 
+    bpy.utils.unregister_class(KIAMODIFIERLIST_Props_item)
+except:
+    pass
+
+
+
+@persistent
+def kiamodifierlist_handler(scene):
+    props = bpy.context.scene.kiamodifierlist_oa
+    ui_list = bpy.context.window_manager.kiamodifierlist_props_modifierlist
+    act = utils.getActiveObj()
+
+    if props.handler_through:
+        return
+
+    if act == None:
+        return 
+
+    mod_count = len(act.modifiers)
+
+    print('kiatool' , props.currentobj , act.name , mod_count ,props.mod_count)
+
+    
+    #選択が変わったときにリロード
+    #モディファイヤの数を保持しておく。モディファイヤ数が変わったらリロード
+    if props.currentobj != act.name:
+        modifierlist.reload()
+        props.currentobj = act.name
+        props.mod_count = mod_count
+    else:
+        if props.mod_count != mod_count:
+            modifierlist.reload()
+            props.mod_count = len(act.modifiers)
+
+
+class KIAMODIFIERLIST_Props_OA(PropertyGroup):
+    handler_through : BoolProperty(default = False)
+    currentobj : StringProperty(maxlen=63)
+    mod_count : IntProperty()
+
+
+#---------------------------------------------------------------------------------------
+#modifierList
+#---------------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------------
+#リスト内のアイテムの見た目を指定
+#---------------------------------------------------------------------------------------
+class KIAMODIFIERLIST_UL_uilist(UIList):
+    
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+
+            #item.nameが表示される
+            layout.prop(item, "bool_val", text = "")
+            layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+            
+            #layout.label(item.name, icon_value='BONE_DATA')
+
+        elif self.layout_type == 'GRID':
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon_value=icon)
+
+
+#---------------------------------------------------------------------------------------
+#リスト名 , list_id can be ””　，item_ptr ,item , index_pointer ,active_index
+#active_indexをui_list.active_indexで取得できる
+#---------------------------------------------------------------------------------------
+class KIAMODIFIERLIST_MT_modifierlist(utils.panel):
+    bl_label = "kia_modifierlist"
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self , width=400)
+
+    def draw(self, context):
+        layout=self.layout
+        row = layout.row()
+
+        col = row.column()
+        ui_list = context.window_manager.kiamodifierlist_props_modifierlist
+
+        col.template_list("KIAMODIFIERLIST_UL_uilist", "", ui_list, "itemlist", ui_list, "active_index", rows=8)
+        col = row.column(align=True)
+
+        col.operator("kiamodifierlist.modifierlist_apply", icon='MODIFIER_ON')
+        col.operator("kiamodifierlist.modifierlist_apply_checked", icon='CHECKBOX_HLT')
+        col.operator("kiamodifierlist.modifierlist_remove", icon='TRASH')
+        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['UP']).type = 'TOP'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_UP').type = 'UP'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_DOWN').type = 'DOWN'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['DOWN']).type = 'BOTTOM'
+
+
+#---------------------------------------------------------------------------------------
+#リストのアイテムに他の情報を埋め込みたい場合はプロパティを追加できるのでいろいろ追加してみよう。
+#ここでレジストしないと不具合がでる。register()に含めたいところだが。
+#TestCollectionPropertyのitemListの型として指定する必要があるので後でレジストできない
+#---------------------------------------------------------------------------------------
+
+class KIAMODIFIERLIST_Props_item(PropertyGroup):
+    name : StringProperty(get=modifierlist.get_item, set=modifierlist.set_item)
+    bool_val : BoolProperty( update = modifierlist.showhide )
+
+bpy.utils.register_class(KIAMODIFIERLIST_Props_item)
+
+
+#---------------------------------------------------------------------------------------
+#アイテムのリストクラス
+#複数のアイテムをリストに持ち、リストにアイテムを加えたり、選択したリストを取得したりする。
+#このクラス自体はuiをもっているわけではないので、現在リストで選択されているインデックスを取得する必要がある。
+#
+#col.template_list("Modifierlist_group_list", "", ui_list, "itemlist", ui_list, "active_index", rows=3)
+#template_listで選択されたアイテムのインデックスをactive_indexに渡すため、上のように指定する必要がある。
+
+#CollectionPropertyへの追加方法例
+# item = self.list.add()
+# item.name = bone.name
+# item.int_val = 10
+#---------------------------------------------------------------------------------------
+class KIAMODIFIERLIST_Props_list(PropertyGroup):
+    active_index : IntProperty()
+    itemlist : CollectionProperty(type=KIAMODIFIERLIST_Props_item)#アイテムプロパティの型を収めることができるリストを生成
+
+
+
+class KIAMODIFIERLIST_OT_modifierlist_move_item(Operator):
+    bl_idname = "kiamodifierlist.modifierlist_move_item"
+    bl_label = ""
+    type = StringProperty(default='UP')
+
+    def execute(self, context):
+        modifierlist.move(self.type)
+        return {'FINISHED'}
+
+class KIAMODIFIERLIST_OT_modifierlist_apply(Operator):
+    """選択をapplyする"""
+    bl_idname = "kiamodifierlist.modifierlist_apply"
+    bl_label = ""
+
+    def execute(self, context):
+        modifierlist.apply()
+        return {'FINISHED'}
+
+class KIAMODIFIERLIST_OT_modifierlist_apply_checked(Operator):
+    """チェックされたものをapplyする"""
+    bl_idname = "kiamodifierlist.modifierlist_apply_checked"
+    bl_label = ""
+
+    def execute(self, context):
+        modifierlist.apply_checked()
+        return {'FINISHED'}
+
+class KIAMODIFIERLIST_OT_modifierlist_remove(Operator):
+    """選択されたものを削除する"""
+    bl_idname = "kiamodifierlist.modifierlist_remove"
+    bl_label = ""
+
+    def execute(self, context):
+        modifierlist.remove()
+        return {'FINISHED'}
+
+
+classes = (
+    KIAMODIFIERLIST_Props_OA,
+    KIAMODIFIERLIST_Props_modifierlist,
+    KIAMODIFIERLIST_UL_uilist,
+    KIAMODIFIERLIST_OT_modifierlist_move_item,
+    KIAMODIFIERLIST_OT_modifierlist_apply,
+    KIAMODIFIERLIST_OT_modifierlist_apply_checked,
+    KIAMODIFIERLIST_OT_modifierlist_remove
+)
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+    bpy.types.Scene.kiamodifierlist_props = PointerProperty(type=KIAMODIFIERLIST_Props_list)
+    bpy.app.handlers.depsgraph_update_pre.append(kiamodifierlist_handler)
+    bpy.types.WindowManager.kiamodifierlist_modifierlist = PointerProperty(type=KIAMODIFIERLIST_Props_modifierlist)
+
+
+
+def unregister():
+    
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+
+    del bpy.types.Scene.kiamodifierlist_props
+    del bpy.types.WindowManager.kiamodifierlist_props_modifierlist
+
+    bpy.app.handlers.depsgraph_update_pre.remove(kiamodifierlist_handler)
+
