@@ -85,7 +85,7 @@ def move(type):
 #選択されたモディファイヤをapply
 #---------------------------------------------------------------------------------------
 def apply():
-    props = bpy.context.scene.kiatools_oa
+    props = bpy.context.scene.kiamodifierlist_props
     props.handler_through = True
 
     ui_list = bpy.context.window_manager.kiamodifierlist_list
@@ -110,7 +110,7 @@ def apply():
 #ハンドラを一時的にOFFにする。
 #---------------------------------------------------------------------------------------
 def apply_checked():
-    props = bpy.context.scene.kiatools_oa
+    props = bpy.context.scene.kiamodifierlist_props
     props.handler_through = True
 
     ui_list = bpy.context.window_manager.kiamodifierlist_list
