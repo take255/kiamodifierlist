@@ -13,9 +13,16 @@
 
 
 import bpy
-from bpy.types import ( PropertyGroup , Panel , Operator ,UIList)
 from bpy.app.handlers import persistent
 import imp
+
+from bpy.types import( 
+    PropertyGroup,
+    Panel,
+    Operator,
+    UIList,
+    AddonPreferences
+    )
 
 from bpy.props import(
     PointerProperty,
