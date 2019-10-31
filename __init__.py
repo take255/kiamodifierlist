@@ -61,9 +61,6 @@ def kiamodifierlist_handler(scene):
         return 
 
     mod_count = len(act.modifiers)
-
-    print('kiatool' , props.currentobj , act.name , mod_count ,props.mod_count)
-
     
     #選択が変わったときにリロード
     #モディファイヤの数を保持しておく。モディファイヤ数が変わったらリロード
@@ -110,7 +107,7 @@ class KIAMODIFIERLIST_UL_uilist(UIList):
 #リスト名 , list_id can be ””　，item_ptr ,item , index_pointer ,active_index
 #active_indexをui_list.active_indexで取得できる
 #---------------------------------------------------------------------------------------
-class KIAMODIFIERLIST_MT_ui(utils.panel):
+class KIAMODIFIERLIST_PT_ui(utils.panel):
     bl_label = "kia_modifierlist"
 
     def invoke(self, context, event):
@@ -129,10 +126,10 @@ class KIAMODIFIERLIST_MT_ui(utils.panel):
         col.operator("kiamodifierlist.modifierlist_apply", icon='MODIFIER_ON')
         col.operator("kiamodifierlist.modifierlist_apply_checked", icon='CHECKBOX_HLT')
         col.operator("kiamodifierlist.modifierlist_remove", icon='TRASH')
-        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['UP']).type = 'TOP'
-        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_UP').type = 'UP'
-        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_DOWN').type = 'DOWN'
-        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['DOWN']).type = 'BOTTOM'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['UP']).dir = 'TOP'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_UP').dir = 'UP'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_DOWN').dir = 'DOWN'
+        col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['DOWN']).dir = 'BOTTOM'
 
 
 #---------------------------------------------------------------------------------------
@@ -168,16 +165,17 @@ class KIAMODIFIERLIST_Props_list(PropertyGroup):
 
 
 class KIAMODIFIERLIST_OT_move_item(Operator):
+    """アイテムの移動"""
     bl_idname = "kiamodifierlist.modifierlist_move_item"
     bl_label = ""
-    type = StringProperty(default='UP')
+    dir : StringProperty(default='UP')
 
     def execute(self, context):
-        cmd.move(self.type)
+        cmd.move(self.dir)
         return {'FINISHED'}
 
 class KIAMODIFIERLIST_OT_apply(Operator):
-    """選択をapplyする"""
+    """選択をapply"""
     bl_idname = "kiamodifierlist.modifierlist_apply"
     bl_label = ""
 
@@ -186,7 +184,7 @@ class KIAMODIFIERLIST_OT_apply(Operator):
         return {'FINISHED'}
 
 class KIAMODIFIERLIST_OT_apply_checked(Operator):
-    """チェックされたものをapplyする"""
+    """チェックされたものをapply"""
     bl_idname = "kiamodifierlist.modifierlist_apply_checked"
     bl_label = ""
 
@@ -195,7 +193,7 @@ class KIAMODIFIERLIST_OT_apply_checked(Operator):
         return {'FINISHED'}
 
 class KIAMODIFIERLIST_OT_remove(Operator):
-    """選択されたものを削除する"""
+    """選択されたものを削除"""
     bl_idname = "kiamodifierlist.modifierlist_remove"
     bl_label = ""
 
@@ -206,7 +204,7 @@ class KIAMODIFIERLIST_OT_remove(Operator):
 
 classes = (
     KIAMODIFIERLIST_Props_OA,
-    KIAMODIFIERLIST_MT_ui,
+    KIAMODIFIERLIST_PT_ui,
 
     KIAMODIFIERLIST_Props_list,
     KIAMODIFIERLIST_UL_uilist,
