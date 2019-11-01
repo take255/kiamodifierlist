@@ -88,10 +88,6 @@ class KIAMODIFIERLIST_Props_OA(PropertyGroup):
 
 
 #---------------------------------------------------------------------------------------
-#modifierList
-#---------------------------------------------------------------------------------------
-
-#---------------------------------------------------------------------------------------
 #リスト内のアイテムの見た目を指定
 #---------------------------------------------------------------------------------------
 class KIAMODIFIERLIST_UL_uilist(UIList):
@@ -102,8 +98,6 @@ class KIAMODIFIERLIST_UL_uilist(UIList):
             #item.nameが表示される
             layout.prop(item, "bool_val", text = "")
             layout.prop(item, "name", text="", emboss=False, icon_value=icon)
-            
-            #layout.label(item.name, icon_value='BONE_DATA')
 
         elif self.layout_type == 'GRID':
             layout.alignment = 'CENTER'
