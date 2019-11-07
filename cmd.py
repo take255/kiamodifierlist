@@ -83,8 +83,9 @@ def move(type):
 
 #---------------------------------------------------------------------------------------
 #選択されたモディファイヤをapply
+#apply remove を1つの関数で扱うように変更
 #---------------------------------------------------------------------------------------
-def apply():
+def apply(mode):
     props = bpy.context.scene.kiamodifierlist_props
     props.handler_through = True
 
@@ -94,56 +95,29 @@ def apply():
 
     if len(itemlist) == 0:
         return
+    indexarray = []
 
-    ob =utils.getActiveObj()
+    for index , mod in enumerate(itemlist):
+        if mode == 0:# apply active index
+            if active_index == index:
+                bpy.ops.object.modifier_apply( modifier = mod.name )    
 
-    for mod in ob.modifiers :
-        if itemlist[active_index].name == mod.name:
-            bpy.ops.object.modifier_apply( modifier = mod.name )
+        elif mode == 1:# apply checked
+            if mod.bool_val:
+                bpy.ops.object.modifier_apply( modifier = mod.name )    
+                indexarray.append(index)
+
+        elif mode == 2:# remove active index
+            if active_index == index:
+                bpy.ops.object.modifier_remove( modifier = mod.name )
+
+        elif mode == 3:#remove checked
+            if mod.bool_val:
+                bpy.ops.object.modifier_remove( modifier = mod.name )
+                indexarray.append(index)
 
     reload()
-    props.handler_through = False
-
-
-#---------------------------------------------------------------------------------------
-#チェックされたモディファイヤをapply
-#ハンドラを一時的にOFFにする。
-#---------------------------------------------------------------------------------------
-def apply_checked():
-    props = bpy.context.scene.kiamodifierlist_props
-    props.handler_through = True
-
-    ui_list = bpy.context.window_manager.kiamodifierlist_list
-    itemlist = ui_list.itemlist
-    active_index = ui_list.active_index
-
-    if len(itemlist) == 0:
-        return
-
-    ob =utils.getActiveObj()
-    
-    for mod in itemlist:
-        if mod.bool_val:
-            bpy.ops.object.modifier_apply( modifier = mod.name )    
-    reload()
+    if len(itemlist)-1 < active_index:
+        ui_list.active_index = len(itemlist)-1
 
     props.handler_through = False
-
-#---------------------------------------------------------------------------------------
-#モディファイヤを削除する
-#---------------------------------------------------------------------------------------
-def remove():
-    ui_list = bpy.context.window_manager.kiamodifierlist_list
-    itemlist = ui_list.itemlist    
-    ob =utils.getActiveObj()    
-    active_index = ui_list.active_index
-
-    for mod in ob.modifiers :
-        if itemlist[active_index].name == mod.name:
-            bpy.ops.object.modifier_remove( modifier = mod.name )
-
-    #リストから削除
-    itemlist.remove(active_index)
-    ui_list.active_index = active_index - 1
-
-

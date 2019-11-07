@@ -47,13 +47,10 @@ bl_info = {
 "description": "kiamodifierlist",
 "category": "Object"}
 
-
-
 try: 
     bpy.utils.unregister_class(KIAMODIFIERLIST_Props_item)
 except:
     pass
-
 
 @persistent
 def kiamodifierlist_handler(scene):
@@ -85,7 +82,6 @@ class KIAMODIFIERLIST_Props_OA(PropertyGroup):
     handler_through : BoolProperty(default = False)
     currentobj : StringProperty(maxlen=63)
     mod_count : IntProperty()
-
 
 #---------------------------------------------------------------------------------------
 #リスト内のアイテムの見た目を指定
@@ -124,9 +120,11 @@ class KIAMODIFIERLIST_PT_ui(utils.panel):
         col.template_list("KIAMODIFIERLIST_UL_uilist", "", ui_list, "itemlist", ui_list, "active_index", rows=8)
         col = row.column(align=True)
 
-        col.operator("kiamodifierlist.modifierlist_apply", icon='MODIFIER_ON')
-        col.operator("kiamodifierlist.modifierlist_apply_checked", icon='CHECKBOX_HLT')
-        col.operator("kiamodifierlist.modifierlist_remove", icon='TRASH')
+        col.operator("kiamodifierlist.modifierlist_apply", icon='MODIFIER_ON').mode = 0
+        col.operator("kiamodifierlist.modifierlist_apply", icon='CHECKBOX_HLT').mode = 1        
+        col.operator("kiamodifierlist.modifierlist_apply", icon='TRASH').mode = 2
+        col.operator("kiamodifierlist.modifierlist_apply", icon='CANCEL').mode = 3
+
         col.operator("kiamodifierlist.modifierlist_move_item", icon=utils.icon['UP']).dir = 'TOP'
         col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_UP').dir = 'UP'
         col.operator("kiamodifierlist.modifierlist_move_item", icon='TRIA_DOWN').dir = 'DOWN'
@@ -163,14 +161,11 @@ class KIAMODIFIERLIST_Props_list(PropertyGroup):
     active_index : IntProperty()
     itemlist : CollectionProperty(type=KIAMODIFIERLIST_Props_item)#アイテムプロパティの型を収めることができるリストを生成
 
-
-
 class KIAMODIFIERLIST_OT_move_item(Operator):
     """アイテムの移動"""
     bl_idname = "kiamodifierlist.modifierlist_move_item"
     bl_label = ""
     dir : StringProperty(default='UP')
-
     def execute(self, context):
         cmd.move(self.dir)
         return {'FINISHED'}
@@ -179,29 +174,10 @@ class KIAMODIFIERLIST_OT_apply(Operator):
     """選択をapply"""
     bl_idname = "kiamodifierlist.modifierlist_apply"
     bl_label = ""
-
+    mode : IntProperty()
     def execute(self, context):
-        cmd.apply()
+        cmd.apply(self.mode)
         return {'FINISHED'}
-
-class KIAMODIFIERLIST_OT_apply_checked(Operator):
-    """チェックされたものをapply"""
-    bl_idname = "kiamodifierlist.modifierlist_apply_checked"
-    bl_label = ""
-
-    def execute(self, context):
-        cmd.apply_checked()
-        return {'FINISHED'}
-
-class KIAMODIFIERLIST_OT_remove(Operator):
-    """選択されたものを削除"""
-    bl_idname = "kiamodifierlist.modifierlist_remove"
-    bl_label = ""
-
-    def execute(self, context):
-        cmd.remove()
-        return {'FINISHED'}
-
 
 classes = (
     KIAMODIFIERLIST_Props_OA,
@@ -211,8 +187,6 @@ classes = (
     KIAMODIFIERLIST_UL_uilist,
     KIAMODIFIERLIST_OT_move_item,
     KIAMODIFIERLIST_OT_apply,
-    KIAMODIFIERLIST_OT_apply_checked,
-    KIAMODIFIERLIST_OT_remove
 )
 
 def register():
@@ -221,7 +195,10 @@ def register():
 
     bpy.types.Scene.kiamodifierlist_props = PointerProperty(type=KIAMODIFIERLIST_Props_OA)
     bpy.types.WindowManager.kiamodifierlist_list = PointerProperty(type=KIAMODIFIERLIST_Props_list)
+
     bpy.app.handlers.depsgraph_update_pre.append(kiamodifierlist_handler)
+    bpy.app.handlers.undo_post.append(kiamodifierlist_handler)
+    bpy.app.handlers.redo_post.append(kiamodifierlist_handler)
 
 
 
@@ -232,5 +209,9 @@ def unregister():
 
     del bpy.types.Scene.kiamodifierlist_props
     del bpy.types.WindowManager.kiamodifierlist_list
+
     bpy.app.handlers.depsgraph_update_pre.remove(kiamodifierlist_handler)
+    bpy.app.handlers.undo_post.remove(kiamodifierlist_handler)
+    bpy.app.handlers.redo_post.remove(kiamodifierlist_handler)
+
 
