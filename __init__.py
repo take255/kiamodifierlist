@@ -48,8 +48,48 @@ except:
     pass
 
 
+CurrentObj = ''
+#Modcount = 0
+
 @persistent
 def kiamodifierlist_handler(scene):
+    props = bpy.context.scene.kiamodifierlist_props
+    global CurrentObj
+    #global Modcount
+
+    if utils.selected() == []:
+        CurrentObj = ''
+        cmd.clear()
+        return
+
+    act = utils.getActiveObj()
+
+    if props.handler_through:
+        return
+
+    if act == None:
+        return 
+
+
+    #選択が変更されたときだけリロード。
+    if CurrentObj != act.name:
+        print('selection changed')
+        cmd.reload()    
+        CurrentObj = act.name
+
+    #モディファイヤの数に変更があればリロード
+    mod_count = len(act.modifiers)
+    if props.mod_count != mod_count:
+        cmd.reload()
+        #Modcount = mod_count
+        props.mod_count
+
+
+
+
+
+
+def kiamodifierlist_handler_(scene):
     props = bpy.context.scene.kiamodifierlist_props
     ui_list = bpy.context.window_manager.kiamodifierlist_list
     act = utils.getActiveObj()
@@ -193,7 +233,7 @@ class KIAMODIFIERLIST_OT_apply_checked(Operator):
         return {'FINISHED'}
 
 class KIAMODIFIERLIST_OT_remove(Operator):
-    """選択されたものを削除"""
+    """チェックされたものを削除"""
     bl_idname = "kiamodifierlist.modifierlist_remove"
     bl_label = ""
 
@@ -220,8 +260,10 @@ def register():
 
     bpy.types.Scene.kiamodifierlist_props = PointerProperty(type=KIAMODIFIERLIST_Props_OA)
     bpy.types.WindowManager.kiamodifierlist_list = PointerProperty(type=KIAMODIFIERLIST_Props_list)
-    bpy.app.handlers.depsgraph_update_pre.append(kiamodifierlist_handler)
 
+    bpy.app.handlers.depsgraph_update_pre.append(kiamodifierlist_handler)
+    bpy.app.handlers.undo_post.append(kiamodifierlist_handler)
+    bpy.app.handlers.redo_post.append(kiamodifierlist_handler)
 
 
 def unregister():
@@ -231,5 +273,8 @@ def unregister():
 
     del bpy.types.Scene.kiamodifierlist_props
     del bpy.types.WindowManager.kiamodifierlist_list
+
     bpy.app.handlers.depsgraph_update_pre.remove(kiamodifierlist_handler)
+    bpy.app.handlers.undo_post.remove(kiamodifierlist_handler)
+    bpy.app.handlers.redo_post.remove(kiamodifierlist_handler)
 

@@ -80,13 +80,26 @@ def move(type):
                         bpy.ops.object.modifier_move_up(modifier = mod.name )
 
 
+#一時的にハンドラの動作をスルーするためのデコレータ
+def handler_through(func):
+    def wrapper(*args, **kwargs):
+        props = bpy.context.scene.kiamodifierlist_props
+        props.handler_through = True
+        func(*args, **kwargs)    
+        props.handler_through = False
+
+        #モディファイヤの
+        act = utils.getActiveObj()
+        props.mod_count = len(act.modifiers)
+
+    return wrapper
+
 
 #---------------------------------------------------------------------------------------
 #選択されたモディファイヤをapply
 #---------------------------------------------------------------------------------------
+@handler_through
 def apply():
-    props = bpy.context.scene.kiamodifierlist_props
-    props.handler_through = True
 
     ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
@@ -102,20 +115,17 @@ def apply():
             bpy.ops.object.modifier_apply( modifier = mod.name )
 
     reload()
-    props.handler_through = False
 
 
 #---------------------------------------------------------------------------------------
 #チェックされたモディファイヤをapply
 #ハンドラを一時的にOFFにする。
 #---------------------------------------------------------------------------------------
+@handler_through
 def apply_checked():
-    props = bpy.context.scene.kiamodifierlist_props
-    props.handler_through = True
 
     ui_list = bpy.context.window_manager.kiamodifierlist_list
     itemlist = ui_list.itemlist
-    active_index = ui_list.active_index
 
     if len(itemlist) == 0:
         return
@@ -127,23 +137,35 @@ def apply_checked():
             bpy.ops.object.modifier_apply( modifier = mod.name )    
     reload()
 
-    props.handler_through = False
-
 #---------------------------------------------------------------------------------------
-#モディファイヤを削除する
+#チェックされたモディファイヤを削除する
 #---------------------------------------------------------------------------------------
+@handler_through
 def remove():
-    ui_list = bpy.context.window_manager.kiamodifierlist_list
-    itemlist = ui_list.itemlist    
-    ob =utils.getActiveObj()    
-    active_index = ui_list.active_index
 
-    for mod in ob.modifiers :
-        if itemlist[active_index].name == mod.name:
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
+    itemlist = ui_list.itemlist
+
+    if len(itemlist) == 0:
+        return
+
+    ob =utils.getActiveObj()
+    
+    for mod in itemlist:
+        if mod.bool_val:
             bpy.ops.object.modifier_remove( modifier = mod.name )
 
-    #リストから削除
-    itemlist.remove(active_index)
-    ui_list.active_index = active_index - 1
+    reload()
 
+
+#---------------------------------------------------------------------------------------
+#リストコマンド
+#---------------------------------------------------------------------------------------
+def itemlist():
+    ui_list = bpy.context.window_manager.kiamodifierlist_list
+    return ui_list.itemlist    
+
+def clear():
+    il = itemlist()
+    il.clear()
 
