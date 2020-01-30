@@ -53,6 +53,7 @@ CurrentObj = ''
 
 @persistent
 def kiamodifierlist_handler(scene):
+    
     props = bpy.context.scene.kiamodifierlist_props
     global CurrentObj
     #global Modcount
@@ -77,12 +78,14 @@ def kiamodifierlist_handler(scene):
         cmd.reload()    
         CurrentObj = act.name
 
+    
+
     #モディファイヤの数に変更があればリロード
     mod_count = len(act.modifiers)
     if props.mod_count != mod_count:
         cmd.reload()
         #Modcount = mod_count
-        props.mod_count
+        props.mod_count = mod_count
 
 
 
